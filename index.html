@@ -230,8 +230,7 @@ body{height:100%;margin:0;background:linear-gradient(180deg,var(--sky),var(--sky
 <div class="overlay" id="sheet" hidden>
   <div class="card wide" role="dialog" aria-labelledby="sheetH">
     <div class="card-head"><h2 id="sheetH">Pick something to play</h2><button class="btn" id="sheetClose">Close</button></div>
-    <h3>First lessons</h3><div class="grid" id="lessonGrid"></div>
-    <h3>Songs</h3><div class="grid" id="songGrid"></div>
+    <div id="sheetBody"></div>
   </div>
 </div>
 
@@ -482,13 +481,32 @@ const TUNES=[
  {id:'hot-cross',title:'Hot Cross Buns',ms:500,notes:'E4 D4 C4:2 E4 D4 C4:2 C4:.5 C4:.5 C4:.5 C4:.5 D4:.5 D4:.5 D4:.5 D4:.5 E4 D4 C4:2'},
  {id:'mary',title:'Mary Had a Little Lamb',ms:420,notes:'E4 D4 C4 D4 E4 E4 E4:2 D4 D4 D4:2 E4 G4 G4:2 E4 D4 C4 D4 E4 E4 E4 E4 D4 D4 E4 D4 C4:4'},
  {id:'twinkle',title:'Twinkle, Twinkle, Little Star',ms:470,notes:'C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2 G4 G4 F4 F4 E4 E4 D4:2 G4 G4 F4 F4 E4 E4 D4:2 C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2'},
- {id:'ode',title:'Ode to Joy',ms:440,notes:'E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:1.5 D4:.5 D4:2 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:1.5 C4:.5 C4:2'},
+ {id:'ode',g:'classical',title:'Ode to Joy',ms:440,notes:'E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:1.5 D4:.5 D4:2 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:1.5 C4:.5 C4:2'},
  {id:'london',title:'London Bridge',ms:420,notes:'G4:1.5 A4:.5 G4 F4 E4 F4 G4:2 D4 E4 F4:2 E4 F4 G4:2 G4:1.5 A4:.5 G4 F4 E4 F4 G4:2 D4:2 G4:2 E4 C4:3'},
  {id:'old-mac',title:'Old MacDonald',ms:400,notes:'G4 G4 G4 D4 E4 E4 D4:2 B4 B4 A4 A4 G4:3 D4 G4 G4 G4 D4 E4 E4 D4:2 B4 B4 A4 A4 G4:4'},
  {id:'row',title:'Row, Row, Row Your Boat',ms:420,notes:'C4:1.5 C4:1.5 C4 D4:.5 E4:1.5 E4 D4:.5 E4 F4:.5 G4:3 C5:.5 C5:.5 C5:.5 G4:.5 G4:.5 G4:.5 E4:.5 E4:.5 E4:.5 C4:.5 C4:.5 C4:.5 G4 F4:.5 E4 D4:.5 C4:3'},
  {id:'frere',title:'Frère Jacques',ms:430,notes:'C4 D4 E4 C4 C4 D4 E4 C4 E4 F4 G4:2 E4 F4 G4:2 G4:.5 A4:.5 G4:.5 F4:.5 E4 C4 G4:.5 A4:.5 G4:.5 F4:.5 E4 C4 C4 G3 C4:2 C4 G3 C4:2'},
- {id:'jingle',title:'Jingle Bells',ms:380,notes:'E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 E4 D4 D4 E4 D4:2 G4:2 E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 G4 G4 F4 D4 C4:4'},
- {id:'birthday',title:'Happy Birthday',ms:520,notes:'G4:.75 G4:.25 A4 G4 C5 B4:2 G4:.75 G4:.25 A4 G4 D5 C5:2 G4:.75 G4:.25 G5 E5 C5 B4 A4:2 F5:.75 F5:.25 E5 C5 D5 C5:3'}
+ {id:'jingle',g:'holiday',title:'Jingle Bells',ms:380,notes:'E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 E4 D4 D4 E4 D4:2 G4:2 E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 G4 G4 F4 D4 C4:4'},
+ {id:'birthday',title:'Happy Birthday',ms:520,notes:'G4:.75 G4:.25 A4 G4 C5 B4:2 G4:.75 G4:.25 A4 G4 D5 C5:2 G4:.75 G4:.25 G5 E5 C5 B4 A4:2 F5:.75 F5:.25 E5 C5 D5 C5:3'},
+ {id:'rain',title:'Rain, Rain, Go Away',ms:460,notes:'G4:2 E4:2 G4 G4 E4:2 G4 G4 E4 A4 G4 G4 E4:2 G4 G4 E4 A4 G4 G4 E4:2 G4:2 E4:2 G4 G4 E4:2'},
+ {id:'baa',title:'Baa, Baa, Black Sheep',ms:460,notes:'C4 C4 G4 G4 A4:.5 B4:.5 C5:.5 A4:.5 G4:2 F4 F4 E4 E4 D4 D4 C4:2 G4 G4:.5 G4:.5 F4 F4 E4 E4:.5 E4:.5 D4:2 G4 G4:.5 G4:.5 F4:.5 F4:.5 F4:.5 F4:.5 E4:.5 E4:.5 E4:.5 E4:.5 D4:2 C4 C4 G4 G4 A4:.5 B4:.5 C5:.5 A4:.5 G4:2 F4 F4 E4 E4 D4 D4 C4:2'},
+ {id:'this-old-man',title:'This Old Man',ms:440,notes:'G4 E4 G4:2 G4 E4 G4:2 A4 G4 F4 E4 D4 E4 F4:2 E4:.5 F4:.5 G4 C4 C4:.5 C4:.5 C4 C4:.5 D4:.5 E4:.5 F4:.5 G4:2 G4 D4 D4 F4:.5 E4:.5 D4 C4:2'},
+ {id:'spider',title:'Itsy Bitsy Spider',ms:420,notes:'D4:.5 G4 G4:.5 G4 A4:.5 B4:1.5 B4 B4:.5 A4 G4:.5 A4 B4:.5 G4:2.5 B4:1.5 B4 C5:.5 D5:2.5 D5:.5 C5 B4:.5 C5 D5:.5 B4:3 G4:1.5 G4 A4:.5 B4:2.5 B4:.5 A4 G4:.5 A4 B4:.5 G4:2 D4:.5 D4:.5 G4 G4:.5 G4 A4:.5 B4:1.5 B4 B4:.5 A4 G4:.5 A4 B4:.5 G4:3'},
+ {id:'wheels',title:'The Wheels on the Bus',ms:420,notes:'C4 F4 F4:.5 F4:.5 F4 A4 C5 A4 F4:2 G4 E4 C4:2 C5 A4 F4:2 C4 F4 F4:.5 F4:.5 F4 A4 C5 A4 F4:2 G4:2 C4 C4 F4:3'},
+ {id:'yankee',title:'Yankee Doodle',ms:300,notes:'G4 G4 A4 B4 G4 B4 A4 D4 G4 G4 A4 B4 G4:2 F#4:2 G4 G4 A4 B4 C5 B4 A4 G4 F#4 D4 E4 F#4 G4:2 G4:2'},
+ {id:'skip',title:'Skip to My Lou',ms:420,notes:'E4:2 C4:2 E4 E4:.5 E4:.5 G4:2 D4:2 B3:2 D4 D4:.5 D4:.5 F4:2 E4:2 C4:2 E4 E4:.5 E4:.5 G4:2 D4 E4:.5 F4:.5 E4 D4 C4:2 C4:2'},
+ {id:'saints',title:'When the Saints Go Marching In',ms:330,notes:'C4 E4 F4 G4:5 C4 E4 F4 G4:5 C4 E4 F4 G4:2 E4:2 C4:2 E4:2 D4:5 E4 E4 D4 C4:3 C4 E4:2 G4:2 G4 F4:3 E4 F4 G4:2 E4:2 C4:2 D4:2 C4:4'},
+ {id:'susanna',title:'Oh! Susanna',ms:330,notes:'C4:.5 D4:.5 E4 G4 G4:1.5 A4:.5 G4 E4 C4:1.5 D4:.5 E4 E4 D4 C4 D4:3 C4:.5 D4:.5 E4 G4 G4:1.5 A4:.5 G4 E4 C4:1.5 D4:.5 E4 E4 D4 D4 C4:4 F4:2 F4:2 A4 A4:2 A4 G4 G4 E4 C4 D4:3 C4:.5 D4:.5 E4 G4 G4:1.5 A4:.5 G4 E4 C4:1.5 D4:.5 E4 E4 D4 D4 C4:4'},
+ {id:'grace',title:'Amazing Grace',ms:520,notes:'D4 G4:2 B4:.5 G4:.5 B4:2 A4 G4:2 E4 D4:2 D4 G4:2 B4:.5 G4:.5 B4:2 A4 D5:5 B4 D5:1.5 B4:.5 D5:.5 B4:.5 G4:2 D4 E4:1.5 G4:.5 G4:.5 E4:.5 D4:2 D4 G4:2 B4:.5 G4:.5 B4:2 A4 G4:3'},
+ {id:'lullaby',title:'Brahms’ Lullaby',ms:520,notes:'E4:.5 E4:.5 G4:2 E4:.5 E4:.5 G4:2 E4:.5 G4:.5 C5 B4:1.5 A4:.5 A4 G4 D4:.5 E4:.5 F4 D4 D4:.5 E4:.5 F4:2 D4:.5 F4:.5 B4:.5 A4:.5 G4 B4 C5:2 C4:.5 C4:.5 C5:2 A4:.5 F4:.5 G4:2 E4:.5 C4:.5 F4 G4 A4 G4:2 C4:.5 C4:.5 C5:2 A4:.5 F4:.5 G4:2 E4:.5 C4:.5 F4 E4 D4 C4:3'},
+ {id:'silent',g:'holiday',title:'Silent Night',ms:520,notes:'G4:1.5 A4:.5 G4 E4:3 G4:1.5 A4:.5 G4 E4:3 D5:2 D5 B4:3 C5:2 C5 G4:3 A4:2 A4 C5:1.5 B4:.5 A4 G4:1.5 A4:.5 G4 E4:3 A4:2 A4 C5:1.5 B4:.5 A4 G4:1.5 A4:.5 G4 E4:3 D5:2 D5 F5:1.5 D5:.5 B4 C5:3 E5:3 C5 G4 E4 G4:1.5 F4:.5 D4 C4:3'},
+ {id:'deck',g:'holiday',title:'Deck the Halls',ms:360,notes:'G4:1.5 F4:.5 E4 D4 C4 D4 E4 C4 D4:.5 E4:.5 F4:.5 D4:.5 E4:1.5 D4:.5 C4 B3 C4:2 G4:1.5 F4:.5 E4 D4 C4 D4 E4 C4 D4:.5 E4:.5 F4:.5 D4:.5 E4:1.5 D4:.5 C4 B3 C4:2 D4:1.5 E4:.5 F4 D4 E4:1.5 F4:.5 G4 D4 E4:.5 F#4:.5 G4 A4:.5 B4:.5 C5 B4 A4 G4:2 G4:1.5 F4:.5 E4 D4 C4 D4 E4 C4 A4:.5 A4:.5 A4:.5 A4:.5 G4:1.5 F4:.5 E4 D4 C4:2'},
+ {id:'we-wish',g:'holiday',title:'We Wish You a Merry Christmas',ms:380,notes:'D4 G4 G4:.5 A4:.5 G4:.5 F#4:.5 E4 E4 E4 A4 A4:.5 B4:.5 A4:.5 G4:.5 F#4 D4 D4 B4 B4:.5 C5:.5 B4:.5 A4:.5 G4 E4 D4:.5 D4:.5 E4 A4 F#4 G4:2 D4 G4 G4 G4 F#4:2 F#4 G4 F#4 E4 D4:2 A4 B4 A4 G4 D5 D4 D4:.5 D4:.5 E4 A4 F#4 G4:3'},
+ {id:'joy',g:'holiday',title:'Joy to the World',ms:300,notes:'C5:2 B4:1.5 A4:.5 G4:3 F4 E4:2 D4:2 C4:3 G4 A4:3 A4 B4:3 B4 C5:3 C5 C5 B4 A4 G4 G4:1.5 F4:.5 E4 C5 C5 B4 A4 G4 G4:1.5 F4:.5 E4 E4 E4 E4 E4 E4:.5 F4:.5 G4:3 F4:.5 E4:.5 D4 D4 D4 D4:.5 E4:.5 F4:3 E4:.5 D4:.5 C4 C5:2 A4 G4:1.5 F4:.5 E4 F4 E4:2 D4:2 C4:4'},
+ {id:'minuet',g:'classical',title:'Minuet in G',ms:460,notes:'D5 G4:.5 A4:.5 B4:.5 C5:.5 D5 G4 G4 E5 C5:.5 D5:.5 E5:.5 F#5:.5 G5 G4 G4 C5 D5:.5 C5:.5 B4:.5 A4:.5 B4 C5:.5 B4:.5 A4:.5 G4:.5 F#4 G4:.5 A4:.5 B4:.5 G4:.5 A4:3 D5 G4:.5 A4:.5 B4:.5 C5:.5 D5 G4 G4 E5 C5:.5 D5:.5 E5:.5 F#5:.5 G5 G4 G4 C5 D5:.5 C5:.5 B4:.5 A4:.5 B4 C5:.5 B4:.5 A4:.5 G4:.5 A4 B4:.5 A4:.5 G4:.5 F#4:.5 G4:3'},
+ {id:'elise',g:'classical',title:'Für Elise (opening)',ms:480,notes:'E5:.5 D#5:.5 E5:.5 D#5:.5 E5:.5 B4:.5 D5:.5 C5:.5 A4:1.5 C4:.5 E4:.5 A4:.5 B4:1.5 E4:.5 G#4:.5 B4:.5 C5:1.5 E4:.5 E5:.5 D#5:.5 E5:.5 D#5:.5 E5:.5 B4:.5 D5:.5 C5:.5 A4:1.5 C4:.5 E4:.5 A4:.5 B4:1.5 E4:.5 C5:.5 B4:.5 A4:2'},
+ {id:'cancan',g:'classical',title:'Can-Can',ms:230,notes:'C4:2 D4 F4 E4 D4 G4:2 G4:2 G4 A4 E4 F4 D4:2 D4:2 D4 F4 E4 D4 C4 C5 B4 A4 G4 F4 E4 D4 C4:2 D4 F4 E4 D4 G4:2 G4:2 G4 A4 E4 F4 D4:2 D4:2 D4 F4 E4 D4 C4 G4 D4 E4 C4:2 C4:2'},
+ {id:'spring',g:'classical',title:'Spring (Vivaldi)',ms:300,notes:'C4 E4 E4 E4 D4:.5 C4:.5 G4:3 G4:.5 F4:.5 E4 E4 E4 D4:.5 C4:.5 G4:3 G4:.5 F4:.5 E4 F4:.5 G4:.5 F4 E4 D4:2 C4 E4 E4 E4 D4:.5 C4:.5 G4:3 G4:.5 F4:.5 E4 E4 E4 D4:.5 C4:.5 G4:3 G4:.5 F4:.5 E4 F4:.5 G4:.5 F4 E4 D4:2 C4:2'}
 ];
 const SEMI={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 function toMidi(s){
@@ -502,15 +520,18 @@ function parseTune(t){
   });
 }
 
-let tune=null,steps=[],at=0,need=new Set(),misses=0,mode='idle',timers=[];
+let tune=null,steps=[],at=0,need=new Set(),misses=0,mode='idle',timers=[],updateWaiting=false;
 const best=store.get('best',{});
 const starsFor=n=>n===0?3:n<=3?2:1;
 function starsHTML(n){let h='';for(let i=1;i<=3;i++)h+=i<=n?'<b>★</b>':'★';return h}
 
+const SECTIONS=[['lesson','First lessons'],['song','Songs'],['holiday','Holiday songs'],['classical','First classical pieces']];
 function fillSheet(){
-  for(const[id,want]of[['lessonGrid',true],['songGrid',false]]){
-    const grid=$(id);grid.textContent='';
-    TUNES.filter(t=>!!t.lesson===want).forEach((t,i)=>{
+  const body=$('sheetBody');body.textContent='';
+  for(const[key,name]of SECTIONS){
+    const h=document.createElement('h3'),grid=document.createElement('div');
+    h.textContent=name;grid.className='grid';body.append(h,grid);
+    TUNES.filter(t=>(t.lesson?'lesson':t.g||'song')===key).forEach((t,i)=>{
       const b=document.createElement('button');
       b.className='tune n'+['c','d','g','a','b','f'][i%6];
       b.innerHTML='<span></span><span class="stars" aria-label="'+(best[t.id]||0)+' of 3 stars">'+starsHTML(best[t.id]||0)+'</span>';
@@ -610,6 +631,7 @@ function finish(){
 function closeTune(){
   stopTimers();mode='idle';tune=null;steps=[];need=new Set();clearTargets();
   $('songUI').hidden=true;$('idle').hidden=false;
+  if(updateWaiting)location.reload();
 }
 function addTrail(m){
   if(mode!=='idle')return;
@@ -629,6 +651,12 @@ build();
 
 // Installed copy only: keep every file on the iPad so it opens with no internet.
 if(document.querySelector('link[rel="manifest"]')&&'serviceWorker' in navigator){
+  // When a newer copy arrives, show it straight away (or as soon as the current song is closed).
+  const hadCopy=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!hadCopy)return;
+    if(mode==='idle'&&!held.size)location.reload();else updateWaiting=true;
+  });
   window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
 }
 })();
