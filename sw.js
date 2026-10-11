@@ -1,6 +1,6 @@
 // Keeps every file on the device so the piano opens with no internet.
 // After changing any file, bump the version below so iPads pick up the new copy.
-const CACHE = 'laylas-piano-v6';
+const CACHE = 'laylas-piano-v7';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

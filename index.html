@@ -849,7 +849,13 @@ async function micStart(){
   if(!ctx||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){kbSay('The microphone is not available here. It works in the copy installed on the Home Screen.');return}
   try{
     micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-  }catch(e){kbSay('The microphone was not allowed. Allow it for this app in the device settings, then try again.');return}
+  }catch(e){
+    const why=e&&e.name||'';
+    kbSay(why==='NotAllowedError'||why==='SecurityError'?'The microphone is blocked for this app. In Settings, open Apps, then Safari, then Microphone, and choose Ask or Allow. Then close Piano fully and open it again.'
+      :why==='NotFoundError'?'No microphone was found on this device.'
+      :'The microphone could not be started ('+(why||'unknown reason')+'). Close Piano fully, open it again and retry.');
+    return;
+  }
   try{if(ctx.state!=='running')await ctx.resume()}catch(e){}
   micNode=ctx.createMediaStreamSource(micStream);micAn=ctx.createAnalyser();micAn.fftSize=2048;
   micBuf=new Float32Array(2048);micNode.connect(micAn);
