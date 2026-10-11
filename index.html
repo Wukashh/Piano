@@ -145,6 +145,14 @@ body{height:100%;margin:0;background:linear-gradient(180deg,var(--sky),var(--sky
 .card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .card-head h2{margin:0}
 .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.tabs{display:flex;gap:8px;margin-top:12px}
+.guide{margin-top:14px;padding:10px 14px;border-radius:14px;background:color-mix(in srgb,var(--sun) 20%,var(--panel));color:var(--ink)}
+.guide summary{font-weight:800;cursor:pointer;min-height:28px;display:flex;align-items:center;gap:8px}
+.guide summary::before{content:"+";font-weight:800;width:14px}
+.guide[open] summary::before{content:"−"}
+.guide summary::-webkit-details-marker{display:none}
+.guide ul{margin:6px 0 4px;padding-left:22px;display:grid;gap:5px;max-width:65ch}
+.tune small{font:600 12px/1.25 var(--font);color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .tune{display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;min-height:72px;padding:12px 14px;border-radius:18px;cursor:pointer;
   font:800 16px/1.15 var(--font);color:var(--ink);background:color-mix(in srgb,var(--nc) 14%,var(--panel));
@@ -230,6 +238,7 @@ body{height:100%;margin:0;background:linear-gradient(180deg,var(--sky),var(--sky
 <div class="overlay" id="sheet" hidden>
   <div class="card wide" role="dialog" aria-labelledby="sheetH">
     <div class="card-head"><h2 id="sheetH">Pick something to play</h2><button class="btn" id="sheetClose">Close</button></div>
+    <div class="tabs" role="group" aria-label="Show"><button class="btn" id="tabLessons" aria-pressed="true">Lessons</button><button class="btn" id="tabSongs" aria-pressed="false">Songs</button></div>
     <div id="sheetBody"></div>
   </div>
 </div>
@@ -374,7 +383,7 @@ function build(){
     }
     els.set(m,el);
   }
-  kb.dataset.labels=labels;
+  kb.dataset.labels=tune&&tune.quiz?'off':labels;
   measure();
   $('octRead').textContent='C'+octave+'–'+LETTER[last%12]+(Math.floor(last/12)-1);
   $('sizeRead').textContent=size+' keys';
@@ -531,7 +540,45 @@ const TUNES=[
  {id:'largo',g:'classical',title:'Largo (New World Symphony)',ms:560,notes:'E4:1.5 G4:.5 G4:2 E4:1.5 D4:.5 C4:2 D4:1.5 E4:.5 G4:1.5 E4:.5 D4:4 E4:1.5 G4:.5 G4:2 E4:1.5 D4:.5 C4:2 D4 E4 D4:1.5 C4:.5 C4:4'},
  {id:'morning',g:'classical',title:'Morning Mood',ms:300,notes:'G4 E4 D4 C4 D4 E4 G4 E4 D4 C4 D4:.5 E4:.5 G4 E4 G4 A4 E4 A4 G4 E4 D4 C4:3'},
  {id:'night-music',g:'classical',title:'A Little Night Music (opening)',ms:400,notes:'G4:1.5 D4:.5 G4:1.5 D4:.5 G4:.5 D4:.5 G4:.5 B4:.5 D5:2 C5:1.5 A4:.5 C5:1.5 A4:.5 C5:.5 A4:.5 F#4:.5 A4:.5 D4:2'},
- {id:'greensleeves',g:'classical',title:'Greensleeves',ms:440,notes:'A4 C5:2 D5 E5:1.5 F#5:.5 E5 D5:2 B4 G4:1.5 A4:.5 B4 C5:2 A4 A4:1.5 G#4:.5 A4 B4:2 G#4 E4:2 A4 C5:2 D5 E5:1.5 F#5:.5 E5 D5:2 B4 G4:1.5 A4:.5 B4 C5:1.5 B4:.5 A4 G#4:1.5 F#4:.5 G#4 A4:3'}
+ {id:'greensleeves',g:'classical',title:'Greensleeves',ms:440,notes:'A4 C5:2 D5 E5:1.5 F#5:.5 E5 D5:2 B4 G4:1.5 A4:.5 B4 C5:2 A4 A4:1.5 G#4:.5 A4 B4:2 G#4 E4:2 A4 C5:2 D5 E5:1.5 F#5:.5 E5 D5:2 B4 G4:1.5 A4:.5 B4 C5:1.5 B4:.5 A4 G#4:1.5 F#4:.5 G#4 A4:3'},
+ {id:'k-twos-threes',g:'keys',title:'Twos and Threes',tip:'Black keys come in groups of two and three.',ms:520,notes:'C#4 D#4 C#4+D#4:2 F#4 G#4 A#4 F#4+G#4+A#4:2 C#5 D#5 C#5+D#5:2 F#5 G#5 A#5 F#5+G#5+A#5:2'},
+ {id:'k-every-c',g:'keys',title:'Find Every C',tip:'C always sits just left of the two black keys.',ms:560,notes:'C3 C4 C5 C6:2 C6 C5 C4 C3:2'},
+ {id:'k-neighbours',g:'keys',title:'Neighbours of C',tip:'B is on the left of C, D is on the right.',ms:500,notes:'C4 B3 C4 D4 C4:2 C5 B4 C5 D5 C5:2'},
+ {id:'k-alphabet',g:'keys',title:'The Musical Alphabet',tip:'Music uses seven letters: A B C D E F G. Then it starts again at A.',ms:480,notes:'A3 B3 C4 D4 E4 F4 G4 A4:2 A4 G4 F4 E4 D4 C4 B3 A3:2'},
+ {id:'k-high-low',g:'keys',title:'High and Low',tip:'Keys on the right sound higher. Keys on the left sound lower.',ms:520,notes:'C4 C5 C4 C5 G4 G5 G4 G5 C4 C5 C6:2 C6 C5 C4:2'},
+ {id:'rh-steps',g:'rh',title:'Steps Up and Down',tip:'A step means moving to the very next key.',ms:440,notes:'C4 D4 E4 D4 C4 D4 E4 F4 E4 D4 E4 F4 G4 F4 E4 D4 C4:2'},
+ {id:'rh-repeat',g:'rh',title:'Bouncing Fingers',tip:'Keep your hand still and let each finger bounce twice.',ms:440,notes:'C4 C4 D4 D4 E4 E4 D4:2 E4 E4 F4 F4 G4 G4 F4:2 E4 E4 D4 D4 C4:4'},
+ {id:'rh-step-skip',g:'rh',title:'Step, Skip, Step',tip:'Some notes are next door, some hop over a key.',ms:460,notes:'C4 D4 E4 G4 F4 E4 D4 F4 E4 C4:2 E4 F4 G4 E4 F4 D4 C4:4'},
+ {id:'rh-twister',g:'rh',title:'Finger Twister',tip:'Go slowly. Each finger takes its own turn.',ms:480,notes:'C4 E4 D4 F4 E4 G4 F4:2 G4 E4 F4 D4 E4 C4 D4:2 C4:4'},
+ {id:'rh-long-short',g:'rh',title:'Long and Short',tip:'Tap Listen first. Some notes are long and some are quick.',ms:500,notes:'C4:2 C4 C4 D4:2 D4 D4 E4:.5 E4:.5 E4:.5 E4:.5 D4:2 C4:4'},
+ {id:'rh-copycat',g:'rh',title:'Copycat',tip:'Each little pattern is played twice.',ms:460,notes:'E4 D4 C4:2 E4 D4 C4:2 G4 F4 E4:2 G4 F4 E4:2 C4 E4 G4 E4 C4:4'},
+ {id:'rh-leaps',g:'rh',title:'Big Leaps',tip:'Stretch from thumb to pinky, then jump a whole octave.',ms:520,notes:'C4 G4 C4 G4 C4 C5:2 C5 G4 C5 G4 C5 C4:2'},
+ {id:'rh-g-position',g:'rh',title:'A New Home on G',tip:'Move your thumb up to G. Same five fingers, new home.',ms:460,notes:'G4 A4 B4 C5 D5:2 D5 C5 B4 A4 G4:2 G4 B4 D5 B4 G4:4'},
+ {id:'lh-hello',g:'lh',title:'Left Hand Says Hello',tip:'Use your left hand. Pinky finger goes on this low C.',ms:560,notes:'C3 C3 C3 C3:2 G3 G3 G3 G3:2 C3:4'},
+ {id:'lh-climb',g:'lh',title:'Left Hand Climb',tip:'Left hand: pinky on C, thumb on G.',ms:480,notes:'C3 D3 E3 F3 G3:2 G3 F3 E3 D3 C3:2'},
+ {id:'lh-skips',g:'lh',title:'Left Hand Skips',tip:'Pinky, middle finger, thumb.',ms:500,notes:'C3 E3 G3:2 G3 E3 C3:2 C3 G3 C3 G3 C3:4'},
+ {id:'lh-bass-walk',g:'lh',title:'Bass Walk',tip:'A low tune for the left hand alone.',ms:460,notes:'C3 E3 G3 E3 C3 E3 G3:2 F3 E3 D3 C3 D3 E3 C3:4'},
+ {id:'lh-chord',g:'lh',title:'Left Hand Chord',tip:'Press all the glowing keys together with your left hand.',ms:600,notes:'C3 E3 G3 C3+E3+G3:2 C3+E3+G3:2 C3+G3:2 C3+E3+G3:4'},
+ {id:'bh-turns',g:'both',title:'Hands Take Turns',tip:'Left hand plays the low keys, then right hand answers up high.',ms:460,notes:'C3 D3 E3 F3 G3:2 C4 D4 E4 F4 G4:2 G3 F3 E3 D3 C3:2 G4 F4 E4 D4 C4:2'},
+ {id:'bh-twins',g:'both',title:'Twins',tip:'Both hands at once, playing the same letter.',ms:560,notes:'C3+C4 D3+D4 E3+E4 F3+F4 G3+G4:2 G3+G4 F3+F4 E3+E4 D3+D4 C3+C4:2'},
+ {id:'bh-helps',g:'both',title:'Left Hand Helps',tip:'When two keys glow, press them together.',ms:520,notes:'C3+C4 D4 E4 D4 C3+C4 D4 E4:2 G3+G4 F4 E4 D4 C3+C4:4'},
+ {id:'bh-twinkle',g:'both',title:'Twinkle with Two Hands',tip:'The left hand adds one low note under the tune.',ms:520,notes:'C3+C4 C4 C3+G4 G4 F3+A4 A4 C3+G4:2 F3+F4 F4 C3+E4 E4 G3+D4 D4 C3+C4:2'},
+ {id:'bh-ode',g:'both',title:'Ode to Joy with Two Hands',tip:'Play it with the right hand alone first, then add the left.',ms:500,notes:'C3+E4 E4 F4 G4 G3+G4 F4 E4 D4 C3+C4 C4 D4 E4 G3+E4:1.5 D4:.5 D4:2 C3+E4 E4 F4 G4 G3+G4 F4 E4 D4 C3+C4 C4 D4 E4 G3+D4:1.5 C4:.5 C3+C4:2'},
+ {id:'t-g-scale',g:'theory',title:'The G Scale',tip:'The G scale needs one black key: F sharp.',ms:440,notes:'G4 A4 B4 C5 D5 E5 F#5 G5:2 G5 F#5 E5 D5 C5 B4 A4 G4:2'},
+ {id:'t-f-scale',g:'theory',title:'The F Scale',tip:'The F scale uses the black key between A and B. It is also called B flat.',ms:440,notes:'F4 G4 A4 A#4 C5 D5 E5 F5:2 F5 E5 D5 C5 A#4 A4 G4 F4:2'},
+ {id:'t-a-minor',g:'theory',title:'The A Minor Scale',tip:'The same white keys as C, but starting on A it sounds sad.',ms:440,notes:'A4 B4 C5 D5 E5 F5 G5 A5:2 A5 G5 F5 E5 D5 C5 B4 A4:2'},
+ {id:'t-chromatic',g:'theory',title:'Every Single Key',tip:'Black and white, one after another, with no skipping.',ms:420,notes:'C4 C#4 D4 D#4 E4 F4 F#4 G4:2 G4 F#4 F4 E4 D#4 D4 C#4 C4:2'},
+ {id:'t-happy-sad',g:'theory',title:'Happy and Sad',tip:'Move the middle note down one key and a happy chord turns sad.',ms:600,notes:'C4 E4 G4 C4+E4+G4:2 C4 D#4 G4 C4+D#4+G4:2 C4+E4+G4:2 C4+D#4+G4:2 C4+E4+G4:4'},
+ {id:'t-three-chords',g:'theory',title:'Three Chords',tip:'The C, F and G chords. Thousands of songs use just these three.',ms:600,notes:'C4+E4+G4:2 C4+E4+G4:2 F4+A4+C5:2 F4+A4+C5:2 G4+B4+D5:2 G4+B4+D5:2 C4+E4+G4:4'},
+ {id:'t-broken',g:'theory',title:'Broken Chords',tip:'The same three chords, one note at a time.',ms:400,notes:'C4 E4 G4 E4 C4 E4 G4 E4 F4 A4 C5 A4 F4 A4 C5 A4 G4 B4 D5 B4 G4 B4 D5 B4 C4 E4 G4 C5:4'},
+ {id:'t-slide',g:'theory',title:'Chord Slide',tip:'Only move the fingers that need to move.',ms:640,notes:'C4+E4+G4:2 C4+F4+A4:2 C4+E4+G4:2 B3+D4+G4:2 C4+E4+G4:4'},
+ {id:'b-climb',g:'black',title:'Black Key Climb',tip:'Three fingers on the group of three black keys.',ms:480,notes:'F#4 G#4 A#4:2 A#4 G#4 F#4:2 F#4 A#4 F#4 A#4 F#4+G#4+A#4:4'},
+ {id:'b-song',g:'black',title:'Black Key Song',tip:'Black keys always sound good together. Make up your own tune afterwards.',ms:460,notes:'F#4 G#4 A#4 C#5 D#5:2 C#5 A#4 G#4 F#4:2 A#4 C#5 D#5 C#5 A#4 G#4 F#4:4'},
+ {id:'b-raindrops',g:'black',title:'Raindrops',tip:'Play it softly, like rain on a window.',ms:480,notes:'D#5 C#5 A#4:2 D#5 C#5 A#4:2 G#4 A#4 C#5 A#4 G#4 F#4:4'},
+ {id:'q-c-to-g',g:'quiz',quiz:1,title:'Find the Note: C to G',tip:'No glowing keys this time. Read the bubble and find the key.',ms:600,gen:()=>pick(['C4','D4','E4','F4','G4'],10)},
+ {id:'q-white',g:'quiz',quiz:1,title:'Find the Note: All Seven',tip:'No glowing keys this time. Read the bubble and find the key.',ms:600,gen:()=>pick(['C4','D4','E4','F4','G4','A4','B4'],12)},
+ {id:'q-black',g:'quiz',quiz:1,title:'Find the Note: Black Keys',tip:'A sharp is the black key just to the right of that letter.',ms:600,gen:()=>pick(['C#4','D#4','F#4','G#4','A#4'],10)},
+ {id:'q-two-octaves',g:'quiz',quiz:1,title:'Find the Note: Low and High',tip:'Any key with the right letter counts. Try to find both of them.',ms:600,gen:()=>pick(['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','G5','A5','B5'],12)}
 ];
 const SEMI={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 function toMidi(s){
@@ -550,13 +597,35 @@ const best=store.get('best',{});
 const starsFor=n=>n===0?3:n<=3?2:1;
 function starsHTML(n){let h='';for(let i=1;i<=3;i++)h+=i<=n?'<b>★</b>':'★';return h}
 
-const SECTIONS=[['lesson','First lessons'],['song','Songs'],['holiday','Holiday songs'],['classical','First classical pieces']];
+const SECTIONS=[['lesson','lessons','1. First lessons'],['keys','lessons','2. Know the keyboard'],['rh','lessons','3. Right hand'],
+  ['lh','lessons','4. Left hand'],['both','lessons','5. Both hands together'],['theory','lessons','6. Scales and chords'],
+  ['black','lessons','7. Black keys'],['quiz','lessons','Note-finding games'],
+  ['song','songs','Songs'],['holiday','songs','Holiday songs'],['classical','songs','First classical pieces']];
+const GUIDE='<summary>For grown-ups: how to practise</summary><ul>'+
+  '<li>Little and often works best. Ten minutes a day beats one long session.</li>'+
+  '<li>Work through the numbered sections in order. Move on when a lesson has earned three stars twice.</li>'+
+  '<li>Tap Listen first, then let her try. Say or sing the note names together.</li>'+
+  '<li>Sit tall, with curved fingers and loose wrists, as if holding a small ball.</li>'+
+  '<li>Fingers are numbered 1 to 5 on each hand, starting from the thumb.</li>'+
+  '<li>Right-hand lessons start from Middle C (C4). Left-hand lessons use the C below it (C3).</li>'+
+  '<li>When the note-finding games feel easy, switch Labels to Off for songs as well.</li>'+
+  '<li>End every session with a song she chooses.</li></ul>';
+let sheetTab='lessons';
+function pick(pool,n){
+  const out=[];
+  while(out.length<n){const x=pool[Math.floor(Math.random()*pool.length)];if(x!==out[out.length-1])out.push(x)}
+  return out.join(' ');
+}
 function fillSheet(){
   const body=$('sheetBody');body.textContent='';
-  for(const[key,name]of SECTIONS){
+  $('tabLessons').setAttribute('aria-pressed',sheetTab==='lessons');
+  $('tabSongs').setAttribute('aria-pressed',sheetTab==='songs');
+  if(sheetTab==='lessons'){const d=document.createElement('details');d.className='guide';d.innerHTML=GUIDE;body.append(d)}
+  for(const[key,tab,name]of SECTIONS){
+    if(tab!==sheetTab)continue;
     const h=document.createElement('h3'),grid=document.createElement('div');
     h.textContent=name;grid.className='grid';body.append(h,grid);
-    TUNES.filter(t=>(t.lesson?'lesson':t.g||'song')===key).forEach((t,i)=>{
+    TUNES.filter(t=>(t.g||(t.lesson?'lesson':'song'))===key).forEach((t,i)=>{
       const b=document.createElement('button');
       b.className='tune n'+['c','d','g','a','b','f'][i%6];
       b.innerHTML='<span></span><span class="stars" aria-label="'+(best[t.id]||0)+' of 3 stars">'+starsHTML(best[t.id]||0)+'</span>';
@@ -575,7 +644,7 @@ function fitRange(){
   if(whites>size)size=SIZES.find(s=>s>=whites)||SIZES[SIZES.length-1];
 }
 function openTune(t){
-  wake();tune=t;steps=parseTune(t);
+  wake();tune=t.gen?Object.assign({},t,{notes:t.gen()}):t;steps=parseTune(tune);
   $('idle').hidden=true;$('songUI').hidden=false;$('songTitle').textContent=t.title;
   fitRange();build();practice();
 }
@@ -583,7 +652,7 @@ function stopTimers(){timers.forEach(clearTimeout);timers=[];for(const s of step
 function clearTargets(){els.forEach(el=>el.classList.remove('target'))}
 function showTargets(){
   clearTargets();
-  if(mode==='practice')need.forEach(n=>{const el=els.get(n);if(el)el.classList.add('target')});
+  if(mode==='practice'&&!tune.quiz)need.forEach(n=>{const el=els.get(n);if(el)el.classList.add('target')});
 }
 function renderLane(){
   if(!tune)return;
@@ -654,7 +723,7 @@ function finish(){
   timers.push(setTimeout(()=>{$('done').hidden=false},450));
 }
 function closeTune(){
-  stopTimers();mode='idle';tune=null;steps=[];need=new Set();clearTargets();
+  stopTimers();mode='idle';tune=null;steps=[];need=new Set();clearTargets();kb.dataset.labels=labels;
   $('songUI').hidden=true;$('idle').hidden=false;
   if(updateWaiting)location.reload();
 }
@@ -666,6 +735,8 @@ function addTrail(m){
 }
 $('songsBtn').onclick=()=>{wake();fillSheet();$('sheet').hidden=false};
 $('sheetClose').onclick=()=>{$('sheet').hidden=true};
+$('tabLessons').onclick=()=>{sheetTab='lessons';fillSheet()};
+$('tabSongs').onclick=()=>{sheetTab='songs';fillSheet()};
 $('listenBtn').onclick=()=>{wake();if(mode==='listen')practice();else listen()};
 $('restartBtn').onclick=()=>{wake();practice()};
 $('closeSong').onclick=closeTune;
