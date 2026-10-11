@@ -146,6 +146,14 @@ body{height:100%;margin:0;background:linear-gradient(180deg,var(--sky),var(--sky
 .card-head h2{margin:0}
 .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .tabs{display:flex;gap:8px;margin-top:12px}
+.way{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:2px solid var(--panel-edge)}
+.way div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.way span{font-size:13px;color:var(--muted)}
+.heard{display:flex;align-items:center;gap:10px}
+.card p.heard,.card p.fine,.card p.msg{margin:12px 0 0}
+.card p.heard,.card p.msg{color:var(--ink)}
+.fine{font-size:13px}
+.msg:empty{display:none}
 .guide{margin-top:14px;padding:10px 14px;border-radius:14px;background:color-mix(in srgb,var(--sun) 20%,var(--panel));color:var(--ink)}
 .guide summary{font-weight:800;cursor:pointer;min-height:28px;display:flex;align-items:center;gap:8px}
 .guide summary::before{content:"+";font-weight:800;width:14px}
@@ -219,6 +227,7 @@ body{height:100%;margin:0;background:linear-gradient(180deg,var(--sky),var(--sky
       <div class="stand-idle" id="idle">
         <div class="meta"><strong>Free play</strong><span>Press any keys you like. Tap Songs to learn a tune.</span></div>
         <div class="trail" id="trail" aria-hidden="true"></div>
+        <button class="btn" id="kbBtn" aria-pressed="false">Real keyboard</button>
       </div>
       <div class="stand-song" id="songUI" hidden>
         <div class="meta"><strong id="songTitle"></strong><span id="songTip"></span><div class="prog"><i id="prog"></i></div></div>
@@ -248,6 +257,24 @@ body{height:100%;margin:0;background:linear-gradient(180deg,var(--sky),var(--sky
     <div class="stars huge" id="doneStars"></div>
     <h2 id="doneH"></h2><p id="doneP"></p>
     <div class="row"><button class="btn" id="againBtn">Play it again</button><button class="btn primary" id="anotherBtn">Pick another</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="kbCard" hidden>
+  <div class="card" role="dialog" aria-labelledby="kbH">
+    <div class="card-head"><h2 id="kbH">Play on a real keyboard</h2><button class="btn" id="kbClose">Close</button></div>
+    <p>Stand this screen on the keyboard. Lessons and songs follow along as the real keys are played.</p>
+    <div class="way">
+      <div><strong>Listen with the microphone</strong><span>Works on iPad. It hears one note at a time, so keep the room quiet and the keyboard volume up.</span></div>
+      <button class="btn" id="micBtn" aria-pressed="false">Turn on</button>
+    </div>
+    <div class="way">
+      <div><strong>Connect with a USB cable</strong><span id="midiNote">For Android phones and computers using Chrome. Follows every key, chords included.</span></div>
+      <button class="btn" id="midiBtn" aria-pressed="false">Connect</button>
+    </div>
+    <p class="heard" id="kbHeardRow" hidden>Last note heard <span class="bub" id="kbHeard"></span></p>
+    <p class="msg" id="kbMsg" role="status"></p>
+    <p class="fine">Middle C is the C nearest the middle of the keyboard. This app calls it C4. Yamaha keyboards show the same key as C3.</p>
   </div>
 </div>
 
@@ -438,7 +465,10 @@ window.addEventListener('pointercancel',pointerEnd);
 kb.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
 kb.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('gesturestart',e=>e.preventDefault());
-document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll();else if(ctx)wake()});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){releaseAll();if(micOn){micStop(true);micResume=true}}
+  else{if(ctx)wake();if(micResume){micResume=false;micStart()}keepAwake()}
+});
 
 // a computer keyboard works too, handy when trying it on a laptop
 const TYPE_KEYS=['a','w','s','e','d','f','t','g','y','h','u','j','k','o','l','p',';'];
@@ -477,7 +507,7 @@ if(goFull&&!installed){
     }catch(e){}
   };
 }
-$('startBtn').onclick=()=>{wake();$('start').hidden=true};
+$('startBtn').onclick=()=>{wake();$('start').hidden=true;if(store.get('mic',false))micStart()};
 
 /* ---------- lessons and songs ---------- */
 const TUNES=[
@@ -609,6 +639,7 @@ const GUIDE='<summary>For grown-ups: how to practise</summary><ul>'+
   '<li>Fingers are numbered 1 to 5 on each hand, starting from the thumb.</li>'+
   '<li>Right-hand lessons start from Middle C (C4). Left-hand lessons use the C below it (C3).</li>'+
   '<li>When the note-finding games feel easy, switch Labels to Off for songs as well.</li>'+
+  '<li>Have a real keyboard? Tap Real keyboard on the music stand so the lessons follow the real keys.</li>'+
   '<li>End every session with a song she chooses.</li></ul>';
 let sheetTab='lessons';
 function pick(pool,n){
@@ -701,11 +732,11 @@ function listen(){
   });
   timers.push(setTimeout(practice,t+350));
 }
-function practiceHit(m,slide){
+function practiceHit(m,slide,loose){   // loose: the microphone hears one note, so one note of a chord is enough
   if(mode!=='practice'||at>=steps.length)return;
   if(need.has(m)){
-    need.delete(m);
-    const el=els.get(m);if(el)el.classList.remove('target');
+    if(loose){need.clear();clearTargets()}
+    else{need.delete(m);const el=els.get(m);if(el)el.classList.remove('target')}
     if(!need.size)setStep(at+1);
   }else if(!slide&&!steps[at].notes.includes(m)){
     misses++;
@@ -742,6 +773,123 @@ $('restartBtn').onclick=()=>{wake();practice()};
 $('closeSong').onclick=closeTune;
 $('againBtn').onclick=()=>{$('done').hidden=true;practice()};
 $('anotherBtn').onclick=()=>{$('done').hidden=true;closeTune();fillSheet();$('sheet').hidden=false};
+
+/* ---------- a real keyboard: heard through the microphone, or by cable where the browser allows ---------- */
+const ext=new Set();
+let micOn=false,micResume=false,micStream=null,micNode=null,micAn=null,micBuf=null,micTimer=0;
+let micCur=null,micCand=null,micCount=0,micQuiet=0,micPrev=0,micLast=0,midiOn=false,screenLock=null;
+function extDown(m,loose){
+  if(ext.has(m))return;
+  ext.add(m);
+  const el=els.get(m);if(el)el.classList.add('down');
+  $('kbHeardRow').hidden=false;$('kbHeard').className='bub n'+COLOR[m%12];$('kbHeard').textContent=noteName(m,labels);
+  addTrail(m);practiceHit(m,false,loose);
+}
+function extUp(m){
+  if(!ext.delete(m)||held.has(m))return;
+  const el=els.get(m);if(el)el.classList.remove('down');
+}
+function kbSay(t){$('kbMsg').textContent=t}
+function kbRefresh(){
+  $('kbBtn').textContent=micOn?'Listening':midiOn?'Keyboard connected':'Real keyboard';
+  $('kbBtn').setAttribute('aria-pressed',micOn||midiOn);
+  $('micBtn').textContent=micOn?'Turn off':'Turn on';$('micBtn').setAttribute('aria-pressed',micOn);
+  $('midiBtn').textContent=midiOn?'Connected':'Connect';$('midiBtn').setAttribute('aria-pressed',midiOn);
+  if(!navigator.requestMIDIAccess){$('midiBtn').disabled=true;$('midiNote').textContent='This browser cannot do this. On iPad, use the microphone instead.'}
+}
+async function keepAwake(){       // nobody touches the screen while playing real keys, so stop it dimming
+  try{
+    if(!navigator.wakeLock||screenLock||!(micOn||midiOn)||document.hidden)return;
+    screenLock=await navigator.wakeLock.request('screen');
+    screenLock.addEventListener('release',()=>{screenLock=null});
+  }catch(e){}
+}
+// Finds the pitch in a short slice of sound (YIN method). Returns 0 when there is no clear single note.
+function pitchOf(buf,rate){
+  const n=buf.length;let rms=0;
+  for(let i=0;i<n;i++)rms+=buf[i]*buf[i];
+  rms=Math.sqrt(rms/n);
+  if(rms<.008)return{rms,f:0};
+  const maxTau=Math.min(Math.floor(rate/110),n>>1),minTau=Math.max(2,Math.floor(rate/2200)),w=n-maxTau;
+  const d=new Float32Array(maxTau+2);let run=0,hit=-1;
+  for(let tau=1;tau<=maxTau;tau++){
+    let sum=0;
+    for(let i=0;i<w;i++){const x=buf[i]-buf[i+tau];sum+=x*x}
+    run+=sum;d[tau]=run?sum*tau/run:1;
+  }
+  for(let tau=minTau;tau<maxTau;tau++){
+    if(d[tau]<.12){while(tau+1<maxTau&&d[tau+1]<d[tau])tau++;hit=tau;break}
+  }
+  if(hit<0)return{rms,f:0};
+  const a=d[hit-1],b=d[hit],c=d[hit+1],bend=(a-c)/(2*(a-2*b+c));
+  return{rms,f:rate/(hit+(isFinite(bend)?bend:0))};
+}
+function micClear(){if(micCur!=null)extUp(micCur);micCur=micCand=null;micCount=0}
+function micTick(){
+  if(!micAn)return;
+  if(mode==='listen'||voices.size){micClear();return}     // do not listen to the app's own sound
+  micAn.getFloatTimeDomainData(micBuf);
+  const{rms,f}=pitchOf(micBuf,ctx.sampleRate),now=performance.now();
+  if(!f){
+    if(rms<.008||++micQuiet>3)micClear();
+    micPrev=rms;return;
+  }
+  micQuiet=0;
+  const m=Math.round(69+12*Math.log2(f/440));
+  if(m===micCand)micCount++;else{micCand=m;micCount=1}
+  if(m!==micCur){
+    if(micCount>=(micCur==null?2:3)){if(micCur!=null)extUp(micCur);micCur=m;micLast=now;extDown(m,true)}
+  }else if(rms>micPrev*1.5&&rms>.02&&now-micLast>140){      // the same key struck again
+    extUp(m);micLast=now;extDown(m,true);
+  }
+  micPrev=rms;
+}
+async function micStart(){
+  wake();kbSay('');
+  if(!ctx||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){kbSay('The microphone is not available here. It works in the copy installed on the Home Screen.');return}
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  }catch(e){kbSay('The microphone was not allowed. Allow it for this app in the device settings, then try again.');return}
+  try{if(ctx.state!=='running')await ctx.resume()}catch(e){}
+  micNode=ctx.createMediaStreamSource(micStream);micAn=ctx.createAnalyser();micAn.fftSize=2048;
+  micBuf=new Float32Array(2048);micNode.connect(micAn);
+  clearInterval(micTimer);micTimer=setInterval(micTick,40);
+  micOn=true;store.set('mic',true);kbSay('Listening. Play a note on the keyboard to test it.');kbRefresh();keepAwake();
+}
+function micStop(keep){
+  clearInterval(micTimer);micClear();
+  try{if(micNode)micNode.disconnect();if(micStream)micStream.getTracks().forEach(t=>t.stop())}catch(e){}
+  micNode=micAn=micStream=null;micOn=false;
+  try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+  if(!keep){store.set('mic',false);kbSay('')}
+  kbRefresh();
+}
+function onMidi(e){
+  const d=e.data;if(!d||d.length<3)return;
+  const kind=d[0]&0xf0;
+  if(kind===0x90&&d[2]>0)extDown(d[1],false);
+  else if(kind===0x80||kind===0x90)extUp(d[1]);
+}
+async function midiStart(){
+  kbSay('');
+  try{
+    const access=await navigator.requestMIDIAccess();
+    const hook=()=>{
+      let n=0;
+      access.inputs.forEach(input=>{input.onmidimessage=onMidi;if(input.state!=='disconnected')n++});
+      midiOn=n>0;
+      if(midiOn&&micOn)micStop(false);
+      kbSay(midiOn?'Keyboard connected. Its own speakers make the sound.':'No keyboard found yet. Plug in the USB cable and switch the keyboard on.');
+      kbRefresh();keepAwake();
+    };
+    access.onstatechange=hook;hook();
+  }catch(e){kbSay('Permission was not given, so the keyboard could not be connected.')}
+}
+$('kbBtn').onclick=()=>{wake();kbRefresh();$('kbCard').hidden=false};
+$('kbClose').onclick=()=>{$('kbCard').hidden=true};
+$('micBtn').onclick=()=>{if(micOn)micStop(false);else micStart()};
+$('midiBtn').onclick=()=>{wake();midiStart()};
+kbRefresh();
 
 build();
 
